@@ -43,7 +43,6 @@ public class Controller {
 
     ObservableList<String> friendList;
     private ArrayList<String> friendArray;
-    private SocialNetList socNetList = new SocialNetList();  // Create an instance of SocialNetList
     private String currentProfile = null;
     private SocialGraph socialGraph; // Make sure you import the SocialGraph class.
 
