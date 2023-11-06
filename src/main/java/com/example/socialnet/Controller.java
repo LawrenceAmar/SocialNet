@@ -82,7 +82,14 @@ public class Controller {
                 if (socialGraph.hasUser(userName)) {
                     // Remove the user and update the graph
                     socialGraph.removeUser(userName);
-                    // Rest of your code to clear user information...
+                    nameLabel.setText(null);
+                    currentStatus.setText(null);
+                    pictureView.setImage(null);
+                    favoriteQuote.setText(null);
+                    statusChangeLabel.setText(null);
+                    pictureLabel.setText(null);
+                    quoteLabel.setText(null);
+                    listView.setItems(null);
                     statusLabel.setText(nameField.getText() + " deleted");
                     nameField.setText(null);
                 } else {
@@ -95,42 +102,17 @@ public class Controller {
             statusLabel.setText("input a name");
         }
     }
-
-    @FXML
-    protected void handleAddFriend() {
-        try {
-            if (currentProfile != null) {
-                if (!friendLabel.getText().trim().isEmpty()) {
-                    String friendName = friendLabel.getText().toLowerCase();
-                    if (socialGraph.hasUser(friendName)) {
-                        // Add a friend connection in the graph
-                        socialGraph.addFriend(currentProfile, friendName);
-                        // Rest of your code...
-                        statusLabel.setText(friendLabel.getText() + " added as friend");
-                    } else {
-                        statusLabel.setText(friendLabel.getText() + " has no profile");
-                    }
-                } else {
-                    statusLabel.setText("input a name to add");
-                }
-            } else {
-                statusLabel.setText("use lookup to edit a profile");
-            }
-        } catch (NullPointerException e) {
-            statusLabel.setText("use lookup to edit a profile");
-        }
-    }
     @FXML
     protected void handleLookup() {
         try {
             if (!nameField.getText().trim().isEmpty()) {
-                int index = socNetList.searchUser(nameField.getText().toLowerCase());
-                if (index >= 0) {
-                    SocialNetUsers user = socNetList.getUser(index);
+                String username = nameField.getText().toLowerCase();
+                if (socialGraph.hasUser(username)) {
+                    SocialNetUsers user = socialGraph.getUser(username);
                     currentProfile = nameField.getText().toLowerCase();
                     nameLabel.setText(user.getName());
                     currentStatus.setText(user.getStatus());
-                    if (socNetList.getUser(index).getPicture() != null) {
+                    if (user.getPicture() != null) {
                         pictureView.setImage(new Image(user.getPicture()));
                     } else {
                         pictureView.setImage(null);
@@ -141,15 +123,11 @@ public class Controller {
                         friendArray = new ArrayList<>(friendListData);
                         friendList.clear(); // Use the class-level friendList here
                         friendList.addAll(friendArray);
-                    }
-
-                else {
+                    } else {
                         friendList.clear(); // Use the class-level friendList here
                         friendArray.clear();
                         System.out.println(friendList.toString());
                     }
-
-
                     listView.setItems(friendList); // Use the class-level friendList here
                     favoriteQuote.setText(user.getQuote());
                     statusLabel.setText(nameField.getText() + " lookup");
@@ -164,84 +142,72 @@ public class Controller {
             statusLabel.setText("input a name");
         }
     }
-
     @FXML
-    protected void handleStatus() {
-        try{
-            if (currentProfile != null){
-                if (!statusChangeLabel.getText().trim().isEmpty()) {
-                    int index = socNetList.searchUser(currentProfile);
-                    socNetList.getUser(index).setStatus(statusChangeLabel.getText());
-                    currentStatus.setText(statusChangeLabel.getText());
-                    statusLabel.setText("status changed to " + statusChangeLabel.getText());
-                }
-                else{
-                    statusLabel.setText("input a status message");
-                }
-            }
-            else{
-                statusLabel.setText("use lookup to edit a profile");
-            }
-        }
-        catch (NullPointerException e){
-            statusLabel.setText("use lookup to edit a profile");
-        }
-    }
-    @FXML
-    protected void handlePicture() {
-        try{
+    protected void handleAddFriend() {
+        try {
             if (currentProfile != null) {
-                if (!pictureLabel.getText().trim().isEmpty()) {
-                    try {
-                        int index = socNetList.searchUser(currentProfile);
-                        socNetList.getUser(index).setPicture(pictureLabel.getText());
-                        pictureView.setImage(new Image(pictureLabel.getText()));
-                        statusLabel.setText("picture changed to " + pictureLabel.getText());
-                    } catch (IllegalArgumentException e) {
-                        statusLabel.setText("cannot find image");
+                if (!friendLabel.getText().trim().isEmpty()) {
+                    if (!friendLabel.getText().toLowerCase().equals(currentProfile)) {
+                        String friendName = friendLabel.getText().toLowerCase();
+                        if (socialGraph.hasUser(friendName)) {
+                            SocialNetUsers user = socialGraph.getUser(currentProfile);
+                            if (!user.getFriends().contains(friendLabel.getText())) {
+                                // Add a friend connection in the graph
+                                socialGraph.addFriend(currentProfile, friendName);
+                                if (user.getFriends() != null) {
+                                    List<String> friendListData = user.getFriends();
+                                    friendArray = new ArrayList<>(friendListData);
+                                    friendList.clear(); // Use the class-level friendList here
+                                    friendList.addAll(friendArray);
+                                } else {
+                                    friendList.clear(); // Use the class-level friendList here
+                                    friendArray.clear();
+                                    System.out.println(friendList.toString());
+                                }
+                                listView.setItems(friendList); // Use the class-level friendList here
+                                statusLabel.setText(friendLabel.getText() + " added as friend");
+                            } else {
+                                statusLabel.setText(friendLabel.getText() + " is already added");
+                            }
+                        } else {
+                            statusLabel.setText(friendLabel.getText() + " has no profile");
+                        }
+                    } else {
+                        statusLabel.setText("cannot add yourself");
                     }
+                } else {
+                    statusLabel.setText("input a name to add");
                 }
-                else{
-                    statusLabel.setText("input an image url");
-                }
-            }
-            else{
+            } else {
                 statusLabel.setText("use lookup to edit a profile");
             }
-        }
-        catch (NullPointerException e){
+        } catch (NullPointerException e) {
             statusLabel.setText("use lookup to edit a profile");
         }
     }
-
     @FXML
     protected void handleUnfriend() {
         try {
             if (currentProfile != null) {
                 if (!unfriendLabel.getText().trim().isEmpty()) {
                     if (!unfriendLabel.getText().toLowerCase().equals(currentProfile)) {
-                        if (socNetList.searchUser(unfriendLabel.getText()) >= 0) {
-                            if (friendArray.contains(unfriendLabel.getText())) {
-                                SocialNetUsers user = socNetList.getUser(socNetList.searchUser(currentProfile));
-                                SocialNetUsers removed = socNetList.getUser(socNetList.searchUser(unfriendLabel.getText()));
-
-                                friendList.remove(unfriendLabel.getText());
-                                friendArray.remove(unfriendLabel.getText());
-
+                        String unfriendName = unfriendLabel.getText().toLowerCase();
+                        if (socialGraph.hasUser(unfriendName)) {
+                            SocialNetUsers user = socialGraph.getUser(currentProfile);
+                            if (user.getFriends().contains(unfriendLabel.getText())) {
+                                socialGraph.removeFriend(currentProfile, unfriendName);
                                 // Set the updated friends list for the user
-                                user.setFriends(friendArray);
-
-                                if (removed.getFriends() != null) {
-                                    List<String> removedFriendsList = removed.getFriends();
-                                    removedFriendsList.remove(currentProfile);
-                                    // Set the updated friends list for the removed user
-                                    removed.setFriends(removedFriendsList);
+                                if (user.getFriends() != null) {
+                                    List<String> friendListData = user.getFriends();
+                                    friendArray = new ArrayList<>(friendListData);
+                                    friendList.clear(); // Use the class-level friendList here
+                                    friendList.addAll(friendArray);
                                 } else {
-                                    // Set an empty list for the removed user
-                                    removed.setFriends(new ArrayList<>());
+                                    friendList.clear(); // Use the class-level friendList here
+                                    friendArray.clear();
+                                    System.out.println(friendList.toString());
                                 }
-
-                                listView.setItems(friendList);
+                                listView.setItems(friendList); // Use the class-level friendList here
                                 statusLabel.setText(unfriendLabel.getText() + " removed as a friend");
                             } else {
                                 statusLabel.setText("cannot find " + unfriendLabel.getText());
@@ -264,12 +230,62 @@ public class Controller {
         }
     }
     @FXML
+    protected void handleStatus() {
+        try{
+            if (currentProfile != null){
+                if (!statusChangeLabel.getText().trim().isEmpty()) {
+                    SocialNetUsers user = socialGraph.getUser(currentProfile);
+                    user.setStatus(statusChangeLabel.getText());
+                    currentStatus.setText(statusChangeLabel.getText());
+                    statusLabel.setText("status changed to " + statusChangeLabel.getText());
+                }
+                else{
+                    statusLabel.setText("input a status message");
+                }
+            }
+            else{
+                statusLabel.setText("use lookup to edit a profile");
+            }
+        }
+        catch (NullPointerException e){
+            statusLabel.setText("use lookup to edit a profile");
+        }
+    }
+    @FXML
+    protected void handlePicture() {
+        try{
+            if (currentProfile != null) {
+                if (!pictureLabel.getText().trim().isEmpty()) {
+                    try {
+                        SocialNetUsers user = socialGraph.getUser(currentProfile);
+                        user.setPicture(pictureLabel.getText());
+                        pictureView.setImage(new Image(pictureLabel.getText()));
+                        statusLabel.setText("picture changed to " + pictureLabel.getText());
+                    } catch (IllegalArgumentException e) {
+                        statusLabel.setText("cannot find image");
+                    }
+                }
+                else{
+                    statusLabel.setText("input an image url");
+                }
+            }
+            else{
+                statusLabel.setText("use lookup to edit a profile");
+            }
+        }
+        catch (NullPointerException e){
+            statusLabel.setText("use lookup to edit a profile");
+        }
+    }
+
+
+    @FXML
     protected void handleQuote() {
         try{
             if (currentProfile != null){
                 if (!quoteLabel.getText().trim().isEmpty()) {
-                    int index = socNetList.searchUser(currentProfile);
-                    socNetList.getUser(index).setQuote(quoteLabel.getText());
+                    SocialNetUsers user = socialGraph.getUser(currentProfile);
+                    user.setQuote(quoteLabel.getText());
                     favoriteQuote.setText(quoteLabel.getText());
                     statusLabel.setText("Quote changed to " + quoteLabel.getText());
                 }

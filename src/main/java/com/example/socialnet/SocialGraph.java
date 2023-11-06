@@ -1,52 +1,49 @@
 package com.example.socialnet;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class SocialGraph {
-    private Map<String, Set<String>> graph;
+    private Map<String, SocialNetUsers> graph;
 
     public SocialGraph() {
         graph = new HashMap<>();
     }
 
     public void addUser(String userName) {
-        if (!graph.containsKey(userName)) {
-            graph.put(userName, new HashSet<>());
-        }
+        SocialNetUsers socNetUser = new SocialNetUsers(userName, null, null, new ArrayList<>(), null);
+        graph.put(userName, socNetUser);
     }
 
     public void addFriend(String user1, String user2) {
-        graph.get(user1).add(user2);
-        graph.get(user2).add(user1);
+        graph.get(user1).getFriends().add(user2);
+        graph.get(user2).getFriends().add(user1);
     }
 
     public void removeFriend(String user1, String user2) {
-        graph.get(user1).remove(user2);
-        graph.get(user2).remove(user1);
+        graph.get(user1).getFriends().remove(user2);
+        graph.get(user2).getFriends().remove(user1);
     }
 
-    public Set<String> getFriends(String userName) {
-        return graph.get(userName);
+    public List<String> getFriends(String userName) {
+        return graph.get(userName).getFriends();
     }
 
     public boolean hasUser(String userName) {
         return graph.containsKey(userName);
     }
+    public SocialNetUsers getUser (String username) {
+        return graph.get(username);
+    }
 
     public void removeUser(String userName) {
         if (graph.containsKey(userName)) {
             // Remove the user from the graph and their connections
-            Set<String> friends = graph.get(userName);
+            List<String> friends = graph.get(userName).getFriends();
             for (String friend : friends) {
-                graph.get(friend).remove(userName);
+                graph.get(friend).getFriends().remove(userName);
             }
             graph.remove(userName);
         }
     }
-
-
     // Other graph-related methods can be added as needed.
 }
